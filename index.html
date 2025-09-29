@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Web Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #5682a3;
+            --secondary-color: #3d6d93;
+            --bg-color: #f0f2f5;
+            --sidebar-bg: #ffffff;
+            --chat-bg: #ffffff;
+            --border-color: #e6e6e6;
+            --text-primary: #000000;
+            --text-secondary: #707579;
+            --message-out: #e3f2cb;
+            --message-in: #ffffff;
+            --premium: #ffd700;
+            --nft: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
+            --online: #00c853;
+            --offline: #ff3d00;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Сайдбар */
+        .sidebar {
+            width: 350px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .sidebar-header {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-container {
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 10px 15px;
+            border-radius: 20px;
+            border: none;
+            background-color: var(--bg-color);
+            font-size: 14px;
+        }
+
+        .chats-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .chat-item {
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s;
+        }
+
+        .chat-item:hover {
+            background-color: var(--bg-color);
+        }
+
+        .chat-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 15px;
+            position: relative;
+        }
+
+        .nft-avatar {
+            border: 2px solid transparent;
+            background-image: var(--nft);
+            background-origin: border-box;
+            background-clip: content-box, border-box;
+        }
+
+        .premium-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            background-color: var(--premium);
+            color: #000;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .online-indicator {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 12px;
+            height: 12px;
+            background-color: var(--online);
+            border: 2px solid white;
+            border-radius: 50%;
+        }
+
+        .chat-info {
+            flex: 1;
+        }
+
+        .chat-name {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .chat-title {
+            font-weight: 600;
+            margin-right: 5px;
+        }
+
+        .chat-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-left: auto;
+        }
+
+        .chat-last-message {
+            font-size: 14px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Основная область чата */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .chat-header {
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--sidebar-bg);
+        }
+
+        .chat-user-info {
+            margin-left: 15px;
+        }
+
+        .chat-user-name {
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .chat-user-status {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: var(--chat-bg);
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23e6e6e6' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .message-in {
+            background-color: var(--message-in);
+            border: 1px solid var(--border-color);
+            align-self: flex-start;
+        }
+
+        .message-out {
+            background-color: var(--message-out);
+            align-self: flex-end;
+            margin-left: auto;
+        }
+
+        .message-sender {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .message-text {
+            font-size: 15px;
+            line-height: 1.4;
+        }
+
+        .message-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-align: right;
+            margin-top: 5px;
+        }
+
+        .gift-message {
+            border-left: 3px solid #ff6b6b;
+            background-color: #fff9f9;
+        }
+
+        .gift-icon {
+            color: #ff6b6b;
+            margin-right: 5px;
+        }
+
+        .chat-input {
+            padding: 15px;
+            background-color: var(--sidebar-bg);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+        }
+
+        .input-box {
+            flex: 1;
+            padding: 12px 15px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            font-size: 15px;
+            margin-right: 10px;
+            resize: none;
+            height: 40px;
+            max-height: 120px;
+        }
+
+        .send-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .send-button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        /* Панель действий */
+        .action-panel {
+            display: flex;
+            padding: 0 10px;
+        }
+
+        .action-button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: var(--text-secondary);
+            margin: 0 5px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+
+        .action-button:hover {
+            background-color: var(--bg-color);
+        }
+
+        /* Защита CloudFlare */
+        .protection-badge {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background-color: #f38020;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .protection-badge i {
+            margin-right: 5px;
+        }
+
+        /* NFT Gallery */
+        .nft-gallery {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nft-gallery-content {
+            background-color: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            padding: 20px;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+
+        .nft-gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .nft-gallery-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .nft-gallery-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .nft-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .nft-item {
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: 1px solid var(--border-color);
+        }
+
+        .nft-item:hover {
+            transform: scale(1.05);
+        }
+
+        .nft-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .nft-name {
+            padding: 10px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        /* Премиум баннер */
+        .premium-banner {
+            background: linear-gradient(45deg, #ffd700, #ffec8b);
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 10px 15px;
+            border-radius: 10px;
+        }
+
+        .premium-text {
+            font-weight: 600;
+            color: #000;
+        }
+
+        .premium-button {
+            background-color: #000;
+            color: #ffd700;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Анонимные номера */
+        .anonymous-badge {
+            background-color: #4ecdc4;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            margin-left: 5px;
+        }
+
+        /* Меню профиля */
+        .profile-menu {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile-content {
+            background-color: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            padding: 20px;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .profile-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .profile-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: block;
+            position: relative;
+        }
+
+        .profile-name {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .profile-bio {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .profile-section {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .profile-info {
+            background-color: var(--bg-color);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+        }
+
+        .info-value {
+            font-weight: 500;
+        }
+
+        .profile-channels {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+        }
+
+        .channel-item {
+            text-align: center;
+        }
+
+        .channel-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 0 auto 5px;
+        }
+
+        .channel-name {
+            font-size: 12px;
+        }
+
+        .privacy-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .privacy-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: var(--bg-color);
+            border-radius: 8px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        .settings-button {
+            background-color: var(--bg-color);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .settings-button:hover {
+            background-color: #e0e0e0;
+        }
+
+        .settings-button i {
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+
+        .add-account-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .add-account-button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .add-account-button i {
+            margin-right: 10px;
+        }
+
+        /* Создание канала */
+        .create-channel {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .create-channel-content {
+            background-color: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            padding: 20px;
+        }
+
+        .create-channel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .create-channel-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .create-channel-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 15px;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-checkbox {
+            margin-right: 10px;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .cancel-button {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .create-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- Сайдбар с чатами -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>Telegram Web Pro</h2>
+            <div class="action-panel">
+                <button class="action-button" title="Создать группу" id="create-group-btn">👥</button>
+                <button class="action-button" title="Создать канал" id="create-channel-btn">📢</button>
+                <button class="action-button" title="Профиль" id="profile-btn">👤</button>
+            </div>
+        </div>
+        
+        <div class="premium-banner">
+            <div class="premium-text">Telegram Premium — новые возможности!</div>
+            <button class="premium-button">ПОЛУЧИТЬ</button>
+        </div>
+        
+        <div class="search-container">
+            <input type="text" class="search-box" placeholder="Поиск">
+        </div>
+        
+        <div class="chats-list">
+            <!-- Чат с NFT пользователем -->
+            <div class="chat-item active">
+                <div class="chat-avatar nft-avatar">
+                    <img src="https://i.pravatar.cc/150?img=1" width="50" height="50" style="border-radius: 50%;">
+                    <div class="premium-badge">★</div>
+                    <div class="online-indicator"></div>
+                </div>
+                <div class="chat-info">
+                    <div class="chat-name">
+                        <div class="chat-title">Алексей (NFT)</div>
+                        <div class="chat-time">12:30</div>
+                    </div>
+                    <div class="chat-last-message">
+                        <span class="gift-icon">🎁</span> Отправил(а) вам подарок
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Чат с анонимным номером -->
+            <div class="chat-item">
+                <div class="chat-avatar">
+                    <img src="https://i.pravatar.cc/150?img=2" width="50" height="50" style="border-radius: 50%;">
+                    <div class="online-indicator"></div>
+                </div>
+                <div class="chat-info">
+                    <div class="chat-name">
+                        <div class="chat-title">+7 *** *** 12 34 <span class="anonymous-badge">Аноним</span></div>
+                        <div class="chat-time">11:45</div>
+                    </div>
+                    <div class="chat-last-message">Привет! Как дела?</div>
+                </div>
+            </div>
+            
+            <!-- Чат с премиум пользователем -->
+            <div class="chat-item">
+                <div class="chat-avatar">
+                    <img src="https://i.pravatar.cc/150?img=3" width="50" height="50" style="border-radius: 50%;">
+                    <div class="premium-badge">★</div>
+                </div>
+                <div class="chat-info">
+                    <div class="chat-name">
+                        <div class="chat-title">Мария (Premium)</div>
+                        <div class="chat-time">10:20</div>
+                    </div>
+                    <div class="chat-last-message">Посмотри это видео!</div>
+                </div>
+            </div>
+            
+            <!-- Групповой чат -->
+            <div class="chat-item">
+                <div class="chat-avatar">
+                    <img src="https://i.pravatar.cc/150?img=4" width="50" height="50" style="border-radius: 50%;">
+                </div>
+                <div class="chat-info">
+                    <div class="chat-name">
+                        <div class="chat-title">Крипто-энтузиасты</div>
+                        <div class="chat-time">09:15</div>
+                    </div>
+                    <div class="chat-last-message">Иван: Новые NFT проекты на этой неделе</div>
+                </div>
+            </div>
+            
+            <!-- Канал -->
+            <div class="chat-item">
+                <div class="chat-avatar">
+                    <img src="https://i.pravatar.cc/150?img=5" width="50" height="50" style="border-radius: 50%;">
+                </div>
+                <div class="chat-info">
+                    <div class="chat-name">
+                        <div class="chat-title">NFT News</div>
+                        <div class="chat-time">08:30</div>
+                    </div>
+                    <div class="chat-last-message">Новые коллекции на этой неделе</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Основная область чата -->
+    <div class="chat-area">
+        <div class="chat-header">
+            <div class="chat-avatar nft-avatar">
+                <img src="https://i.pravatar.cc/150?img=1" width="40" height="40" style="border-radius: 50%;">
+                <div class="premium-badge">★</div>
+                <div class="online-indicator"></div>
+            </div>
+            <div class="chat-user-info">
+                <div class="chat-user-name">Алексей (NFT)</div>
+                <div class="chat-user-status">был(а) в сети только что</div>
+            </div>
+            <div class="action-panel" style="margin-left: auto;">
+                <button class="action-button" title="Поиск">🔍</button>
+                <button class="action-button" title="Меню">☰</button>
+            </div>
+        </div>
+        
+        <div class="chat-messages">
+            <!-- Входящее сообщение -->
+            <div class="message message-in">
+                <div class="message-sender">Алексей</div>
+                <div class="message-text">Привет! Посмотри на мой новый NFT аватар! 🔥</div>
+                <div class="message-time">12:15</div>
+            </div>
+            
+            <!-- Исходящее сообщение -->
+            <div class="message message-out">
+                <div class="message-text">Круто! Как его получить?</div>
+                <div class="message-time">12:16</div>
+            </div>
+            
+            <!-- Сообщение с подарком -->
+            <div class="message message-in gift-message">
+                <div class="message-sender">Алексей</div>
+                <div class="message-text">
+                    <span class="gift-icon">🎁</span> Я отправил тебе подарок — специальный NFT для твоего профиля!
+                </div>
+                <div class="message-time">12:20</div>
+            </div>
+            
+            <!-- Исходящее сообщение -->
+            <div class="message message-out">
+                <div class="message-text">Вау, спасибо! Как его активировать?</div>
+                <div class="message-time">12:21</div>
+            </div>
+            
+            <!-- Входящее сообщение -->
+            <div class="message message-in">
+                <div class="message-sender">Алексей</div>
+                <div class="message-text">Просто нажми на подарок в сообщении и он автоматически добавится в твою коллекцию NFT</div>
+                <div class="message-time">12:22</div>
+            </div>
+            
+            <!-- Исходящее сообщение -->
+            <div class="message message-out">
+                <div class="message-text">Отлично! А как насчет премиум функций? Стоит ли покупать?</div>
+                <div class="message-time">12:25</div>
+            </div>
+            
+            <!-- Входящее сообщение -->
+            <div class="message message-in">
+                <div class="message-sender">Алексей</div>
+                <div class="message-text">Определенно! С премиум ты получаешь увеличенные лимиты загрузки, эксклюзивные стикеры, анимационные аватары и приоритетную поддержку. Плюс, все видят твой премиум статус ★</div>
+                <div class="message-time">12:28</div>
+            </div>
+        </div>
+        
+        <div class="chat-input">
+            <div class="action-panel">
+                <button class="action-button" title="Смайлики">😊</button>
+                <button class="action-button" title="Вложения">📎</button>
+                <button class="action-button" title="Подарки" id="gift-button">🎁</button>
+                <button class="action-button" title="NFT" id="nft-button">🖼️</button>
+            </div>
+            <textarea class="input-box" placeholder="Сообщение"></textarea>
+            <button class="send-button">➤</button>
+        </div>
+    </div>
+    
+    <!-- NFT Галерея -->
+    <div class="nft-gallery" id="nft-gallery">
+        <div class="nft-gallery-content">
+            <div class="nft-gallery-header">
+                <div class="nft-gallery-title">Мои NFT</div>
+                <button class="nft-gallery-close" id="nft-close">×</button>
+            </div>
+            <div class="nft-grid">
+                <div class="nft-item">
+                    <img src="https://via.placeholder.com/150x150/ff6b6b/ffffff?text=NFT1" class="nft-image">
+                    <div class="nft-name">Космический воин</div>
+                </div>
+                <div class="nft-item">
+                    <img src="https://via.placeholder.com/150x150/4ecdc4/ffffff?text=NFT2" class="nft-image">
+                    <div class="nft-name">Цифровой дракон</div>
+                </div>
+                <div class="nft-item">
+                    <img src="https://via.placeholder.com/150x150/45b7d1/ffffff?text=NFT3" class="nft-image">
+                    <div class="nft-name">Кибер-кошка</div>
+                </div>
+                <div class="nft-item">
+                    <img src="https://via.placeholder.com/150x150/96ceb4/ffffff?text=NFT4" class="nft-image">
+                    <div class="nft-name">Неоновый город</div>
+                </div>
+                <div class="nft-item">
+                    <img src="https://via.placeholder.com/150x150/feca57/ffffff?text=NFT5" class="nft-image">
+                    <div class="nft-name">Золотой бит</div>
+                </div>
+                <div class="nft-item">
+                    <img src="https://via.placeholder.com/150x150/ff9ff3/ffffff?text=NFT6" class="nft-image">
+                    <div class="nft-name">Розовый единорог</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Меню профиля -->
+    <div class="profile-menu" id="profile-menu">
+        <div class="profile-content">
+            <div class="profile-header">
+                <div class="profile-title">Мой профиль</div>
+                <button class="profile-close" id="profile-close">×</button>
+            </div>
+            
+            <img src="https://i.pravatar.cc/150?img=8" class="profile-avatar nft-avatar">
+            <div class="profile-name">Иван Петров <span class="premium-badge">★</span></div>
+            <div class="profile-bio">Крипто-энтузиаст, коллекционер NFT, разработчик</div>
+            
+            <div class="profile-section">
+                <div class="section-title">Информация</div>
+                <div class="profile-info">
+                    <div class="info-item">
+                        <div class="info-label">Номер телефона</div>
+                        <div class="info-value">+7 *** *** 56 78 <span class="anonymous-badge">Аноним</span></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Имя пользователя</div>
+                        <div class="info-value">@ivan_nft</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Bio</div>
+                        <div class="info-value">Крипто-энтузиаст, коллекционер NFT, разработчик</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="profile-section">
+                <div class="section-title">Мои каналы</div>
+                <div class="profile-channels">
+                    <div class="channel-item">
+                        <img src="https://i.pravatar.cc/150?img=5" class="channel-avatar">
+                        <div class="channel-name">NFT News</div>
+                    </div>
+                    <div class="channel-item">
+                        <img src="https://i.pravatar.cc/150?img=6" class="channel-avatar">
+                        <div class="channel-name">Crypto World</div>
+                    </div>
+                    <div class="channel-item">
+                        <img src="https://i.pravatar.cc/150?img=7" class="channel-avatar">
+                        <div class="channel-name">Tech Talks</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="profile-section">
+                <div class="section-title">Настройки конфиденциальности</div>
+                <div class="privacy-options">
+                    <div class="privacy-option">
+                        <div>Показывать номер телефона</div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="privacy-option">
+                        <div>Показывать информацию о себе</div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="privacy-option">
+                        <div>Показывать мои каналы</div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="settings-button">
+                <i class="fas fa-user-edit"></i> Редактировать профиль
+            </button>
+            <button class="settings-button">
+                <i class="fas fa-shield-alt"></i> Безопасность
+            </button>
+            <button class="settings-button">
+                <i class="fas fa-moon"></i> Ночной режим
+            </button>
+            <button class="settings-button">
+                <i class="fas fa-language"></i> Язык
+            </button>
+            
+            <button class="add-account-button">
+                <i class="fas fa-plus"></i> Добавить аккаунт
+            </button>
+        </div>
+    </div>
+    
+    <!-- Создание канала -->
+    <div class="create-channel" id="create-channel">
+        <div class="create-channel-content">
+            <div class="create-channel-header">
+                <div class="create-channel-title">Создать канал</div>
+                <button class="create-channel-close" id="create-channel-close">×</button>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Название канала</label>
+                <input type="text" class="form-input" placeholder="Введите название канала">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Описание канала</label>
+                <textarea class="form-textarea" placeholder="Введите описание канала"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Аватар канала</label>
+                <input type="file" class="form-input">
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" class="form-checkbox">
+                    Сделать канал NFT-эксклюзивным
+                </label>
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" class="form-checkbox" checked>
+                    Публичный канал
+                </label>
+            </div>
+            
+            <div class="form-actions">
+                <button class="cancel-button" id="cancel-create-channel">Отмена</button>
+                <button class="create-button">Создать канал</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Бейдж защиты CloudFlare -->
+    <div class="protection-badge">
+        <i class="fas fa-shield-alt"></i> Защищено CloudFlare
+    </div>
+
+    <script>
+        // Открытие NFT галереи
+        document.getElementById('nft-button').addEventListener('click', function() {
+            document.getElementById('nft-gallery').style.display = 'flex';
+        });
+        
+        // Закрытие NFT галереи
+        document.getElementById('nft-close').addEventListener('click', function() {
+            document.getElementById('nft-gallery').style.display = 'none';
+        });
+        
+        // Открытие профиля
+        document.getElementById('profile-btn').addEventListener('click', function() {
+            document.getElementById('profile-menu').style.display = 'flex';
+        });
+        
+        // Закрытие профиля
+        document.getElementById('profile-close').addEventListener('click', function() {
+            document.getElementById('profile-menu').style.display = 'none';
+        });
+        
+        // Открытие создания канала
+        document.getElementById('create-channel-btn').addEventListener('click', function() {
+            document.getElementById('create-channel').style.display = 'flex';
+        });
+        
+        // Закрытие создания канала
+        document.getElementById('create-channel-close').addEventListener('click', function() {
+            document.getElementById('create-channel').style.display = 'none';
+        });
+        
+        document.getElementById('cancel-create-channel').addEventListener('click', function() {
+            document.getElementById('create-channel').style.display = 'none';
+        });
+        
+        // Отправка сообщения при нажатии Enter
+        document.querySelector('.input-box').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        // Отправка сообщения при клике на кнопку
+        document.querySelector('.send-button').addEventListener('click', sendMessage);
+        
+        function sendMessage() {
+            const input = document.querySelector('.input-box');
+            const text = input.value.trim();
+            
+            if (text) {
+                const messagesContainer = document.querySelector('.chat-messages');
+                const messageElement = document.createElement('div');
+                messageElement.className = 'message message-out';
+                messageElement.innerHTML = `
+                    <div class="message-text">${text}</div>
+                    <div class="message-time">${getCurrentTime()}</div>
+                `;
+                
+                messagesContainer.appendChild(messageElement);
+                input.value = '';
+                
+                // Прокрутка к последнему сообщению
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                
+                // Имитация ответа
+                setTimeout(() => {
+                    const replyElement = document.createElement('div');
+                    replyElement.className = 'message message-in';
+                    replyElement.innerHTML = `
+                        <div class="message-sender">Алексей</div>
+                        <div class="message-text">Понял ваше сообщение: "${text}"</div>
+                        <div class="message-time">${getCurrentTime()}</div>
+                    `;
+                    
+                    messagesContainer.appendChild(replyElement);
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }, 1000);
+            }
+        }
+        
+        function getCurrentTime() {
+            const now = new Date();
+            return `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+        }
+        
+        // Обработка кнопки подарков
+        document.getElementById('gift-button').addEventListener('click', function() {
+            const messagesContainer = document.querySelector('.chat-messages');
+            const giftElement = document.createElement('div');
+            giftElement.className = 'message message-out';
+            giftElement.innerHTML = `
+                <div class="message-text"><span class="gift-icon">🎁</span> Отправил(а) подарок</div>
+                <div class="message-time">${getCurrentTime()}</div>
+            `;
+            
+            messagesContainer.appendChild(giftElement);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            // Имитация получения подарка
+            setTimeout(() => {
+                const replyElement = document.createElement('div');
+                replyElement.className = 'message message-in gift-message';
+                replyElement.innerHTML = `
+                    <div class="message-sender">Алексей</div>
+                    <div class="message-text"><span class="gift-icon">🎁</span> Принял ваш подарок! Спасибо!</div>
+                    <div class="message-time">${getCurrentTime()}</div>
+                `;
+                
+                messagesContainer.appendChild(replyElement);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }, 1000);
+        });
+        
+        // Имитация защиты от DDoS
+        console.log("🛡️ CloudFlare защита активирована");
+        console.log("🔒 Защита от DDoS включена");
+        console.log("🌐 Все запросы проходят через CloudFlare");
+    </script>
+</body>
+  </html>
